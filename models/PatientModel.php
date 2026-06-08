@@ -5,10 +5,10 @@ require_once 'BaseModel.php';
 class PatientModel extends BaseModel
 {
 
-
+    //تبحث عن مريض بواسطة معرف المستخدم المرتبط به
     public function findByUserId($userId)
     {
-       return $this->fetchOne("
+        return $this->fetchOne("
             SELECT *
             FROM users
             WHERE id = ?
@@ -16,7 +16,7 @@ class PatientModel extends BaseModel
         ", "i", [$userId]);
     }
 
-
+    //جلب كل المرضى
     public function getAll()
     {
         $sql = "SELECT id, name, email, phone, created_at
@@ -27,7 +27,7 @@ class PatientModel extends BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-
+    //جلب مريض بواسطة معرفه
     public function findById($id)
     {
         $sql = "SELECT * FROM users WHERE id = ? AND role = 'patient'";
@@ -35,7 +35,7 @@ class PatientModel extends BaseModel
         return $result->fetch_assoc();
     }
 
-
+    //حساب إجمالي عدد المرضى
     public function countAll()
     {
         $sql = "SELECT COUNT(*) as total FROM users WHERE role = 'patient'";
@@ -44,7 +44,7 @@ class PatientModel extends BaseModel
         return $row['total'] ?? 0;
     }
 
-
+    //جلب المرضى مع دعم الترقيم
     public function getAllPaginated($page = 1, $itemsPerPage = 10)
     {
         $offset = ($page - 1) * $itemsPerPage;
@@ -57,7 +57,7 @@ class PatientModel extends BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-
+    //إنشاء مريض جديد
     public function create($name, $email, $password, $phone = '')
     {
         $hashed = password_hash($password, PASSWORD_BCRYPT);
@@ -66,7 +66,7 @@ class PatientModel extends BaseModel
         return $this->execute($sql, 'ssss', [$name, $email, $hashed, $phone]);
     }
 
-
+    //تحديث بيانات المريض
     public function update($id, $name, $email, $phone = '')
     {
         $sql = "UPDATE users SET name = ?, email = ?, phone = ?
@@ -74,14 +74,14 @@ class PatientModel extends BaseModel
         return $this->execute($sql, 'sssi', [$name, $email, $phone, $id]);
     }
 
-
+    //حذف مريض
     public function delete($id)
     {
         $sql = "DELETE FROM users WHERE id = ? AND role = 'patient'";
         return $this->execute($sql, 'i', [$id]);
     }
 
-
+    //تفعيل أو تعطيل حساب المريض
     public function toggleActive($id)
     {
         $sql = "UPDATE users SET is_active = NOT is_active
@@ -89,7 +89,7 @@ class PatientModel extends BaseModel
         return $this->execute($sql, 'i', [$id]);
     }
 
-
+    //جلب جميع الوصفات الطبية لمريض معين
     public function searchPatients($search = '')
     {
         $search = trim($search);
@@ -107,7 +107,7 @@ class PatientModel extends BaseModel
                 )
                 ORDER BY name ASC";
 
-        $like   = '%' . $search . '%';
+        $like = '%' . $search . '%';
         $result = $this->execute($sql, 'ss', [$like, $like]);
         return $result->fetch_all(MYSQLI_ASSOC);
     }

@@ -4,7 +4,7 @@ require_once 'BaseModel.php';
 class AppointmentModel extends BaseModel
 {
 
-
+    //جلب موعد بواسطة معرفه مع بيانات المريض والطبيب
     public function findById($id)
     {
         $sql = "SELECT a.*, p.name as patient_name, u.name as doctor_name
@@ -16,7 +16,7 @@ class AppointmentModel extends BaseModel
         $result = $this->execute($sql, 'i', [$id]);
         return $result->fetch_assoc();
     }
-
+    //حجز موعد جديد
     public function book($data)
     {
         $sql = "INSERT INTO appointments (patient_id, doctor_id, appt_date, appt_time, reason, status)
@@ -29,18 +29,16 @@ class AppointmentModel extends BaseModel
             $data['reason']
         ]);
     }
-
+    //امنع الحجز المزدوج
     public function hasConflict($doctorId, $date, $time)
     {
-
-
         $sql = "SELECT id FROM appointments
                 WHERE doctor_id = ? AND appt_date = ? AND appt_time = ?
                 AND status != 'cancelled'";
         $result = $this->execute($sql, 'iss', [$doctorId, $date, $time]);
         return $result->num_rows > 0;
     }
-
+    //تحديث حاله الموعد
     public function updateStatus($id, $status, $notes = null)
     {
         $allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
@@ -48,49 +46,48 @@ class AppointmentModel extends BaseModel
             return false;
         }
 
-        $sql    = "UPDATE appointments SET status = ?";
+        $sql = "UPDATE appointments SET status = ?";
         $params = [$status];
-        $types  = 's';
+        $types = 's';
 
         if ($notes !== null) {
-            $sql     .= ", doctor_notes = ?";
+            $sql .= ", doctor_notes = ?";
             $params[] = $notes;
-            $types   .= 's';
+            $types .= 's';
         }
 
-        $sql     .= " WHERE id = ?";
+        $sql .= " WHERE id = ?";
         $params[] = $id;
-        $types   .= 'i';
+        $types .= 'i';
 
         return $this->execute($sql, $types, $params);
     }
-
-
+    //اجمالي عدد المواعيد 
     public function countAll()
     {
-        $sql    = "SELECT COUNT(*) as total FROM appointments";
+        $sql = "SELECT COUNT(*) as total FROM appointments";
         $result = $this->execute($sql);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return $row['total'];
     }
-
+    //اجمالي عدد المواعيد اليوم 
     public function getTodayCount($doctorId = null)
     {
-        $sql    = "SELECT COUNT(*) as total FROM appointments WHERE appt_date = CURDATE()";
+        $sql = "SELECT COUNT(*) as total FROM appointments WHERE appt_date = CURDATE()";
         $params = [];
-        $types  = '';
+        $types = '';
 
         if ($doctorId) {
-            $sql     .= " AND doctor_id = ?";
+            $sql .= " AND doctor_id = ?";
             $params[] = $doctorId;
-            $types   .= 'i';
+            $types .= 'i';
         }
 
         $result = $this->execute($sql, $types, $params);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return $row['total'];
     }
-
+    //بحسب كل مواعيد هذا الطبيب (بغض النظر عن الحالة)
     public function getDashboardStats($doctorId)
     {
         $sql = "SELECT
@@ -102,17 +99,17 @@ class AppointmentModel extends BaseModel
                 FROM appointments
                 WHERE doctor_id = ?";
         $result = $this->execute($sql, 'i', [$doctorId]);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return [
-            'total'     => $row['total'] ?? 0,
-            'pending'   => $row['pending'] ?? 0,
+            'total' => $row['total'] ?? 0,
+            'pending' => $row['pending'] ?? 0,
             'confirmed' => $row['confirmed'] ?? 0,
             'completed' => $row['completed'] ?? 0,
             'cancelled' => $row['cancelled'] ?? 0
         ];
     }
 
-
+    //	مواعيد مريض (مع Pagination)
     public function getByPatient($patientId, $limit = 10, $offset = 0)
     {
         return $this->fetchAll("
@@ -129,7 +126,7 @@ class AppointmentModel extends BaseModel
     ", "i", [$patientId]);
     }
 
-
+    //    مواعيد طبيب (مع Pagination)
     public function getByPatientFiltered($patientId, $page = 1, $filters = [])
     {
         $offset = ($page - 1) * ITEMS_PER_PAGE;
@@ -145,23 +142,23 @@ class AppointmentModel extends BaseModel
         ";
 
         $params = [$patientId];
-        $types  = 'i';
+        $types = 'i';
 
         if (!empty($filters['status'])) {
-            $sql     .= " AND appointments.status = ?";
+            $sql .= " AND appointments.status = ?";
             $params[] = $filters['status'];
-            $types   .= 's';
+            $types .= 's';
         }
 
-        $sql     .= " ORDER BY appointments.appt_date DESC, appointments.appt_time DESC LIMIT ? OFFSET ?";
+        $sql .= " ORDER BY appointments.appt_date DESC, appointments.appt_time DESC LIMIT ? OFFSET ?";
         $params[] = ITEMS_PER_PAGE;
         $params[] = $offset;
-        $types   .= 'ii';
+        $types .= 'ii';
 
         $result = $this->execute($sql, $types, $params);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //عدد المواعيد النشطة (غير الملغاة) لمريض معين
     public function getByDoctor($doctorId, $page, $filters = [])
     {
         $offset = ($page - 1) * ITEMS_PER_PAGE;
@@ -186,12 +183,12 @@ class AppointmentModel extends BaseModel
     ";
 
         $params = [$doctorId];
-        $types  = 'i';
+        $types = 'i';
 
         if (!empty($filters['status'])) {
-            $sql     .= " AND a.status = ?";
+            $sql .= " AND a.status = ?";
             $params[] = $filters['status'];
-            $types   .= 's';
+            $types .= 's';
         }
 
         $sql .= "
@@ -201,13 +198,13 @@ class AppointmentModel extends BaseModel
 
         $params[] = ITEMS_PER_PAGE;
         $params[] = $offset;
-        $types   .= 'ii';
+        $types .= 'ii';
 
         $result = $this->execute($sql, $types, $params);
 
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //عدد المواعيد النشطة (غير الملغاة) لمريض معين
     public function getAll($page = 1, $filters = [])
     {
         $offset = ($page - 1) * ITEMS_PER_PAGE;
@@ -227,53 +224,53 @@ class AppointmentModel extends BaseModel
     ";
 
         $conditions = [];
-        $params     = [];
-        $types      = '';
+        $params = [];
+        $types = '';
 
         if (!empty($filters['patient_name'])) {
             $conditions[] = "(p.name LIKE ? OR duser.name LIKE ?)";
-            $params[]     = '%' . $filters['patient_name'] . '%';
-            $params[]     = '%' . $filters['patient_name'] . '%';
-            $types       .= 'ss';
+            $params[] = '%' . $filters['patient_name'] . '%';
+            $params[] = '%' . $filters['patient_name'] . '%';
+            $types .= 'ss';
         }
 
         if (!empty($filters['doctor_id'])) {
             $conditions[] = "a.doctor_id = ?";
-            $params[]     = $filters['doctor_id'];
-            $types       .= 'i';
+            $params[] = $filters['doctor_id'];
+            $types .= 'i';
         }
 
         if (!empty($filters['status'])) {
             $conditions[] = "a.status = ?";
-            $params[]     = $filters['status'];
-            $types       .= 's';
+            $params[] = $filters['status'];
+            $types .= 's';
         }
 
         if (!empty($filters['start_date'])) {
             $conditions[] = "a.appt_date >= ?";
-            $params[]     = $filters['start_date'];
-            $types       .= 's';
+            $params[] = $filters['start_date'];
+            $types .= 's';
         }
 
         if (!empty($filters['end_date'])) {
             $conditions[] = "a.appt_date <= ?";
-            $params[]     = $filters['end_date'];
-            $types       .= 's';
+            $params[] = $filters['end_date'];
+            $types .= 's';
         }
 
         if (!empty($conditions)) {
             $sql .= " AND " . implode(" AND ", $conditions);
         }
 
-        $sql     .= " ORDER BY a.appt_date DESC, a.appt_time DESC LIMIT ? OFFSET ?";
+        $sql .= " ORDER BY a.appt_date DESC, a.appt_time DESC LIMIT ? OFFSET ?";
         $params[] = ITEMS_PER_PAGE;
         $params[] = $offset;
-        $types   .= 'ii';
+        $types .= 'ii';
 
         $result = $this->execute($sql, $types, $params);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //جلب كل المواعيد مع بيانات الطبيب والمريض والتخصص (لتصدير Excel)
     public function countFiltered($scope, $scopedId, $filters = [])
     {
 
@@ -284,61 +281,61 @@ class AppointmentModel extends BaseModel
                 JOIN users duser ON d.user_id = duser.id ";
 
         if ($scope == 'patient') {
-            $sql    .= "WHERE a.patient_id = ?";
-            $params  = [$scopedId];
-            $types   = 'i';
+            $sql .= "WHERE a.patient_id = ?";
+            $params = [$scopedId];
+            $types = 'i';
         } elseif ($scope == 'doctor') {
-            $sql    .= "WHERE a.doctor_id = ?";
-            $params  = [$scopedId];
-            $types   = 'i';
+            $sql .= "WHERE a.doctor_id = ?";
+            $params = [$scopedId];
+            $types = 'i';
         } else {
-            $sql    .= "WHERE 1=1";
-            $params  = [];
-            $types   = '';
+            $sql .= "WHERE 1=1";
+            $params = [];
+            $types = '';
         }
 
         if (!empty($filters['status'])) {
-            $sql     .= " AND a.status = ?";
+            $sql .= " AND a.status = ?";
             $params[] = $filters['status'];
-            $types   .= 's';
+            $types .= 's';
         }
 
         if (!empty($filters['patient_name'])) {
-            $sql     .= " AND (p.name LIKE ? OR duser.name LIKE ?)";
+            $sql .= " AND (p.name LIKE ? OR duser.name LIKE ?)";
             $params[] = '%' . $filters['patient_name'] . '%';
             $params[] = '%' . $filters['patient_name'] . '%';
-            $types   .= 'ss';
+            $types .= 'ss';
         }
 
         if (!empty($filters['doctor_id'])) {
-            $sql     .= " AND a.doctor_id = ?";
+            $sql .= " AND a.doctor_id = ?";
             $params[] = $filters['doctor_id'];
-            $types   .= 'i';
+            $types .= 'i';
         }
 
         if (!empty($filters['start_date'])) {
-            $sql     .= " AND a.appt_date >= ?";
+            $sql .= " AND a.appt_date >= ?";
             $params[] = $filters['start_date'];
-            $types   .= 's';
+            $types .= 's';
         }
 
         if (!empty($filters['end_date'])) {
-            $sql     .= " AND a.appt_date <= ?";
+            $sql .= " AND a.appt_date <= ?";
             $params[] = $filters['end_date'];
-            $types   .= 's';
+            $types .= 's';
         }
 
         $result = $this->execute($sql, $types, $params);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return (int) $row['total'];
     }
-
+    //حذف موعد
     public function deleteAppointment($id)
     {
         $sql = "DELETE FROM appointments WHERE id = ?";
         return $this->execute($sql, 'i', [$id]);
     }
-
+    //جلب كل المواعيد مع بيانات الطبيب والمريض والتخصص (لتصدير Excel)
     public function getAllForExport($filters = [])
     {
         $sql = "SELECT a.*,
@@ -353,25 +350,25 @@ class AppointmentModel extends BaseModel
             WHERE 1=1";
 
         $params = [];
-        $types  = '';
+        $types = '';
 
         if (!empty($filters['doctor_id'])) {
-            $sql     .= " AND a.doctor_id = ?";
+            $sql .= " AND a.doctor_id = ?";
             $params[] = $filters['doctor_id'];
-            $types   .= 'i';
+            $types .= 'i';
         }
 
         if (!empty($filters['status'])) {
-            $sql     .= " AND a.status = ?";
+            $sql .= " AND a.status = ?";
             $params[] = $filters['status'];
-            $types   .= 's';
+            $types .= 's';
         }
 
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $sql     .= " AND a.appt_date BETWEEN ? AND ?";
+            $sql .= " AND a.appt_date BETWEEN ? AND ?";
             $params[] = $filters['start_date'];
             $params[] = $filters['end_date'];
-            $types   .= 'ss';
+            $types .= 'ss';
         }
 
         $sql .= " ORDER BY a.appt_date DESC";
@@ -381,7 +378,7 @@ class AppointmentModel extends BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-
+    //إحصائيات أسبوعية
     public function getWeeklyStats()
     {
         $sql = "SELECT status, COUNT(*) as total
@@ -397,7 +394,7 @@ class AppointmentModel extends BaseModel
         return $stats;
     }
 
-
+    //    مواعيد اليوم لطبيب معين
     public function getTodayAppointmentsByDoctor($doctorId)
     {
         $sql = "SELECT a.*, p.name as patient_name
@@ -409,29 +406,29 @@ class AppointmentModel extends BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-
+    //عدد المواعيد النشطة (غير الملغاة) لمريض معين
     public function getActiveCountForPatient($patientId)
     {
         $sql = "SELECT COUNT(*) as total
                 FROM appointments
                 WHERE patient_id = ? AND status IN ('pending', 'confirmed')";
         $result = $this->execute($sql, 'i', [$patientId]);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return (int) ($row['total'] ?? 0);
     }
 
-
+    //عدد المواعيد المكتملة
     public function getCompletedCountForPatient($patientId)
     {
         $sql = "SELECT COUNT(*) as total
                 FROM appointments
                 WHERE patient_id = ? AND status = 'completed'";
         $result = $this->execute($sql, 'i', [$patientId]);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return (int) ($row['total'] ?? 0);
     }
 
-
+    //أقرب موعد قادم
     public function getNextAppointmentForPatient($patientId)
     {
         $sql = "SELECT a.*, u.name as doctor_name, s.name as specialization
@@ -446,7 +443,7 @@ class AppointmentModel extends BaseModel
         return $result->fetch_assoc();
     }
 
-
+    //آخر 5 مواعيد
     public function getRecentAppointmentsForPatient($patientId, $limit = 5)
     {
         $sql = "SELECT a.*, u.name as doctor_name

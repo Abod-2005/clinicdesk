@@ -5,7 +5,7 @@ require_once 'BaseModel.php';
 class PrescriptionModel extends BaseModel
 {
 
-
+    //جلب كل الوصفات الطبية مع بيانات المريض والطبيب والتاريخ
     public function getAll()
     {
         $sql = "
@@ -38,7 +38,7 @@ class PrescriptionModel extends BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
-
+    //جلب الوصفات الطبية لمريض معين مع بيانات الطبيب والتاريخ
     public function getByPatient($patientId)
     {
         $sql = "
@@ -78,7 +78,7 @@ class PrescriptionModel extends BaseModel
         return [];
     }
 
-
+    //إنشاء وصفة طبية جديدة
     public function create($data)
     {
         $sql = "
@@ -105,8 +105,7 @@ class PrescriptionModel extends BaseModel
             $data['file_path'] ?? null
         ]);
     }
-
-
+    //البحث عن روشتة بواسطة الموعد
     public function getByAppointment($appointmentId)
     {
         $sql = "
@@ -119,8 +118,7 @@ class PrescriptionModel extends BaseModel
 
         return $result->fetch_assoc();
     }
-
-
+    //التحقق مما إذا كانت هناك وصفة طبية مرتبطة بموعد معين
     public function existsForAppointment($appointmentId)
     {
         $sql = "

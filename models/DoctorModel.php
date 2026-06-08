@@ -3,7 +3,7 @@ require_once 'BaseModel.php';
 
 class DoctorModel extends BaseModel
 {
-
+    //البحث عن طبيب بواسطه ال يوزر ايدي
     public function findByUserId($userId)
     {
         $sql = "SELECT d.*, u.name, u.email, u.phone, s.name as specialization_name
@@ -14,7 +14,7 @@ class DoctorModel extends BaseModel
         $result = $this->execute($sql, 'i', [$userId]);
         return $result->fetch_assoc();
     }
-
+    //جلب كل الاطباء
     public function getAll()
     {
         $sql = "SELECT d.id, d.user_id, d.specialization_id, d.bio,
@@ -29,15 +29,15 @@ class DoctorModel extends BaseModel
         $result = $this->execute($sql);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //جلب ايام عمل الدكتور حسب ال * id الخاص بيه
     public function getAvailableDays($doctorId)
     {
-        $sql    = "SELECT available_days FROM doctors WHERE id = ?";
+        $sql = "SELECT available_days FROM doctors WHERE id = ?";
         $result = $this->execute($sql, 'i', [$doctorId]);
-        $row    = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
         return explode(',', $row['available_days'] ?? 'Sun,Mon,Tue,Wed,Thu');
     }
-
+    //انشاء طبيب جديد
     public function create($data)
     {
         $sql = "
@@ -62,7 +62,7 @@ class DoctorModel extends BaseModel
             $data['years_experience'] ?? 0
         ]);
     }
-
+    //تحديث بيانات الطبيب
     public function update($doctorId, $data)
     {
         $sql = "UPDATE doctors SET specialization_id = ?, consultation_fee = ?, available_days = ?, bio = ?
@@ -75,21 +75,21 @@ class DoctorModel extends BaseModel
             $doctorId
         ]);
     }
-
+    //حذف طبيب
     public function deleteDoctor($id)
     {
         $sql = "DELETE FROM doctors WHERE id = ?";
         return $this->execute($sql, 'i', [$id]);
     }
 
-
+    //تحديث بروفايل الطبيب
     public function updatePhoto($doctorId, $photoName)
     {
         $sql = "UPDATE doctors SET photo = ? WHERE id = ?";
         return $this->execute($sql, 'si', [$photoName, $doctorId]);
     }
 
-
+    //جلب ال id الخاص بالطبيب بواسطة ال user_id
     public function getIdByUserId($userId)
     {
         $sql = "SELECT id FROM doctors WHERE user_id = ?";
@@ -98,7 +98,7 @@ class DoctorModel extends BaseModel
         return $row['id'] ?? null;
     }
 
-
+    //البحث عن طبيب بواسطة الاسم او الايميل
     public function searchDoctors($search = '')
     {
         $search = trim($search);
@@ -121,7 +121,7 @@ class DoctorModel extends BaseModel
                 GROUP BY d.id
                 ORDER BY u.name";
 
-        $like   = '%' . $search . '%';
+        $like = '%' . $search . '%';
         $result = $this->execute($sql, 'ss', [$like, $like]);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
