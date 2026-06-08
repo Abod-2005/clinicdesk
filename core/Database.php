@@ -1,26 +1,30 @@
 <?php
-class Database {
+class Database
+{
     private static $instance = null;
     private $conn;
 
-    private function __construct() {
+    private function __construct()
+    {
         $this->conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
         if ($this->conn->connect_error) {
             throw new RuntimeException("Database connection failed.");
         }
-
+        //عشان تدعم العربي و الرموز
         $this->conn->set_charset("utf8mb4");
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = new Database();
         }
         return self::$instance;
     }
 
-    public function query($sql, $types = "", $params = []) {
+    public function query($sql, $types = "", $params = [])
+    {
         $stmt = $this->conn->prepare($sql);
 
         if (!$stmt) {
@@ -40,24 +44,30 @@ class Database {
         return true;
     }
 
-    public function lastInsertId() {
+    public function lastInsertId()
+    {
         return $this->conn->insert_id;
     }
 
 
-    public function beginTransaction() {
+    public function beginTransaction()
+    {
         $this->conn->autocommit(false);
     }
 
-    public function commit() {
+    public function commit()
+    {
         $this->conn->commit();
         $this->conn->autocommit(true);
     }
 
-    public function rollback() {
+    public function rollback()
+    {
         $this->conn->rollback();
         $this->conn->autocommit(true);
     }
 
-    private function __clone() {}
+    private function __clone()
+    {
+    }
 }
