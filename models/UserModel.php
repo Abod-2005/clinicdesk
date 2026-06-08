@@ -3,13 +3,14 @@ require_once 'BaseModel.php';
 
 class UserModel extends BaseModel
 {
-
+    //تبحث عن مستخدم بواسطة المعرف
     public function findById($id)
     {
         $sql = "SELECT * FROM users WHERE id = ?";
         $result = $this->execute($sql, 'i', [$id]);
         return $result->fetch_assoc();
     }
+    //تبحث عن مستخدم بواسطة البريد الإلكتروني 
     public function findByEmail($email)
     {
         $sql = "SELECT * FROM users WHERE email = ?";
@@ -20,6 +21,7 @@ class UserModel extends BaseModel
         }
         return null;
     }
+    //إنشاء مستخدم جديد
     public function create($data)
     {
         $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
@@ -33,7 +35,7 @@ class UserModel extends BaseModel
         ]);
         return $this->db->lastInsertId();
     }
-
+    //تحديث بيانات المستخدم
     public function update($id, $data)
     {
         $sql = "UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?";
@@ -44,19 +46,19 @@ class UserModel extends BaseModel
             $id
         ]);
     }
-
+    //حذف مستخدم
     public function deleteUser($id)
     {
         $sql = "DELETE FROM users WHERE id = ?";
         return $this->execute($sql, 'i', [$id]);
     }
-
+    //تفعيل أو تعطيل مستخدم
     public function toggleActive($id)
     {
         $sql = "UPDATE users SET is_active = NOT is_active WHERE id = ?";
         return $this->execute($sql, 'i', [$id]);
     }
-
+    //جلب المستخدمين مع دعم التصفية والبحث والفرز
     public function getAllPaginated($page, $role = "", $search = "")
     {
         $offset = ($page - 1) * ITEMS_PER_PAGE;
@@ -86,6 +88,7 @@ class UserModel extends BaseModel
         $result = $this->execute($sql, $types, $params);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+    //حساب إجمالي عدد المستخدمين مع دعم التصفية والبحث
     public function countAll($role = "", $search = "")
     {
         $sql = "SELECT COUNT(*) as total FROM users WHERE 1=1";
@@ -111,14 +114,14 @@ class UserModel extends BaseModel
         return $row['total'];
     }
 
-
+    //جلب جميع المرضى
     public function getPatients()
     {
         $sql = "SELECT id, name, email, phone FROM users WHERE role = 'patient' ORDER BY name";
         $result = $this->execute($sql);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //جلب جميع الأطباء مع تخصصاتهم
     public function getDoctors()
     {
         $sql = "SELECT u.id, u.name, u.email, d.specialization_id
@@ -129,34 +132,34 @@ class UserModel extends BaseModel
         $result = $this->execute($sql);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //جلب جميع المستخدمين بدون تصفية
     public function getAllUsers()
     {
         $sql = "SELECT * FROM users ORDER BY created_at DESC";
         $result = $this->execute($sql);
         return $result->fetch_all(MYSQLI_ASSOC);
     }
-
+    //جلب مستخدم بواسطة المعرف
     public function getUserById($id)
     {
         $sql = "SELECT * FROM users WHERE id = ?";
         $result = $this->execute($sql, 'i', [$id]);
         return $result->fetch_assoc();
     }
-
+    //إنشاء مستخدم جديد
     public function createUser($name, $email, $password, $role)
     {
         $hashed = password_hash($password, PASSWORD_BCRYPT);
         $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
         return $this->execute($sql, 'ssss', [$name, $email, $hashed, $role]);
     }
-
+    //تحديث بيانات المستخدم
     public function updateUser($id, $name, $email)
     {
         $sql = "UPDATE users SET name = ?, email = ? WHERE id = ?";
         return $this->execute($sql, 'ssi', [$name, $email, $id]);
     }
-
+    //إحصائيات الـ Dashboard
     public function countByRole($role)
     {
         $sql = "SELECT COUNT(*) as total FROM users WHERE role = ?";
@@ -165,7 +168,7 @@ class UserModel extends BaseModel
         return $row['total'];
     }
 
-
+    //تحديث كلمة مرور المستخدم
     public function updatePassword($id, $newPassword)
     {
         $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
