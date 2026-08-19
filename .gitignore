@@ -1,5 +1,5 @@
 # DB credentials — never commit
-config/database.php
+.env
 
 # Uploaded files — not part of source code
 public/uploads/avatars/*

@@ -1,0 +1,9 @@
+.git
+.env
+logs
+public/uploads/avatars/*
+public/uploads/doctor_photos/*
+public/uploads/prescriptions/*
+!public/uploads/avatars/.gitkeep
+!public/uploads/doctor_photos/.gitkeep
+!public/uploads/prescriptions/.gitkeep
